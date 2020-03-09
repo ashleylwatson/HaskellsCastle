@@ -1,4 +1,4 @@
-# HaskellsCastle
+# Haskell's Castle
 Terminal game written in Haskell based on the game Helen's Mysterious Castle.
 
 Type `ghci HaskellsCastle` into a terminal to play.
