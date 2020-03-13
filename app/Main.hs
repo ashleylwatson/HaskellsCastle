@@ -1,5 +1,4 @@
-module HaskellsCastle (
-) where
+module Main where
 
 import CharacUtil
 import SelectSystem
@@ -27,13 +26,13 @@ main = do
               Game . P (C "Haskell" (28,28) 0 []) <*> head $ gameRooms
        2 -> do saveData <- getSaveData
                flip fix 1 $ \load select -> do
-               saveSelect <- selectSave saveData
-               case saveSelect of
-                    -1 -> load select
-                    0 -> main
-                    _ -> case saveData !!! saveSelect of
-                              Nothing -> load select
-                              (Just save) -> void $ runStateT play save
+                saveSelect <- selectSave saveData
+                case saveSelect of
+                     -1 -> load select
+                     0 -> main
+                     _ -> case saveData !!! saveSelect of
+                               Nothing -> load select
+                               (Just save) -> void $ runStateT play save
        3 -> do let spacing s = sp4 ++ s ++ ln
                runIdentityT $
                  notice (spacing "Enter  -> Select Option" ++
