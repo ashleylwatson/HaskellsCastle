@@ -63,10 +63,10 @@ univSelSystem columns extrakeys fitInto select numOfOpt options =
      input <- fix $ \getInput -> do
        input <- getCh
        -- pressing enter or any of the extrakeys are valid inputs
-       if elem input $ '\n' : map fst extrakeys then return input else do
+       if elem input $ '\n' : map fst extrakeys then return input
        -- a or d benig valid inputs depends in columns
-       let menuType col keys = columns == col && elem input keys
-       if menuType 1 "ws" || menuType 2 "wsad" then return input else getInput
+       else let selType col keys = columns == col && elem input keys in
+         if selType 1 "ws" || selType 2 "wsad" then return input else getInput
      case input of
        '\n' -> return select
        _ | elem input $ map fst extrakeys ->
