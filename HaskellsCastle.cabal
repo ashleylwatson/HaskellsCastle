@@ -1,0 +1,79 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.31.2.
+--
+-- see: https://github.com/sol/hpack
+--
+-- hash: 8b5aaa9042d36118812e04f443292500ac9d64ead3b4f67c6f6391bfca58a2c6
+
+name:           HaskellsCastle
+version:        0.1.0.0
+description:    Please see the README on GitHub at <https://github.com/ashleylwatson/HaskellsCastle#readme>
+homepage:       https://github.com/ashleylwatson/HaskellsCastle#readme
+bug-reports:    https://github.com/ashleylwatson/HaskellsCastle/issues
+author:         Ashley Watson
+maintainer:     ashleylwatson@protonmail.com
+copyright:      2020 Ashley Watson
+license:        BSD3
+license-file:   LICENSE
+build-type:     Simple
+extra-source-files:
+    README.md
+    ChangeLog.md
+
+source-repository head
+  type: git
+  location: https://github.com/ashleylwatson/HaskellsCastle
+
+library
+  exposed-modules:
+      Battle
+      CharacUtil
+      GameRules
+      Player
+      Rooms
+      SelectSystem
+  other-modules:
+      Paths_HaskellsCastle
+  hs-source-dirs:
+      src
+  build-depends:
+      base >=4.7 && <5
+    , lens ==4.19.1
+    , mtl ==2.2.2
+    , random ==1.1
+    , transformers ==0.5.6.2
+  default-language: Haskell2010
+
+executable HaskellsCastle-exe
+  main-is: Main.hs
+  other-modules:
+      Paths_HaskellsCastle
+  hs-source-dirs:
+      app
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      HaskellsCastle
+    , base >=4.7 && <5
+    , lens ==4.19.1
+    , mtl ==2.2.2
+    , random ==1.1
+    , transformers ==0.5.6.2
+  default-language: Haskell2010
+
+test-suite HaskellsCastle-test
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  other-modules:
+      Paths_HaskellsCastle
+  hs-source-dirs:
+      test
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      HaskellsCastle
+    , base >=4.7 && <5
+    , lens ==4.19.1
+    , mtl ==2.2.2
+    , random ==1.1
+    , transformers ==0.5.6.2
+  default-language: Haskell2010

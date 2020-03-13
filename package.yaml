@@ -1,0 +1,52 @@
+name:                HaskellsCastle
+version:             0.1.0.0
+github:              "ashleylwatson/HaskellsCastle"
+license:             BSD3
+author:              "Ashley Watson"
+maintainer:          "ashleylwatson@protonmail.com"
+copyright:           "2020 Ashley Watson"
+
+extra-source-files:
+- README.md
+- ChangeLog.md
+
+# Metadata used when publishing your package
+# synopsis:            Short description of your package
+# category:            Web
+
+# To avoid duplicated efforts in documentation and dealing with the
+# complications of embedding Haddock markup inside cabal files, it is
+# common to point users to the README.md file.
+description:         Please see the README on GitHub at <https://github.com/ashleylwatson/HaskellsCastle#readme>
+
+dependencies:
+- base >= 4.7 && < 5
+- lens == 4.19.1
+- mtl == 2.2.2
+- random == 1.1
+- transformers == 0.5.6.2
+
+library:
+  source-dirs: src
+
+executables:
+  HaskellsCastle-exe:
+    main:                Main.hs
+    source-dirs:         app
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - HaskellsCastle
+
+tests:
+  HaskellsCastle-test:
+    main:                Spec.hs
+    source-dirs:         test
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - HaskellsCastle
