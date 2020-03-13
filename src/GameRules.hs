@@ -85,107 +85,107 @@ menu menuSelect = do
           else lift . writeFile ("Sv" ++ show saveSelect ++ ".txt") . show=<<get
     -- After selecting a utility, choose what to do with it
   else flip fix 1 $ \selectOption select -> do
-  gameState <- get
-  let viewPlayer attribute = view (player . attribute) gameState
-      selectedUtil = viewPlayer belt !!! utilSelect
-      showUtilPair = on (++) $ showUtilFrom (viewPlayer belt)
-                           <*> \n -> if n == utilSelect then "> " else "  "
-      newPre = pre (viewPlayer xp) ++ showUtilPair 1 2 ++ ln ++
-               showHP (viewPlayer hp) ++ showUtilPair 3 4 ++ ln
-      showlLVupCost = case view nextLevels selectedUtil of
-                           (x:_) -> strictSpacing 4 (show $ fst x)
-                           [] -> sp4
-      utilTrait = view trait selectedUtil
-      beltLength = length $ viewPlayer belt
-  -- Choose LVLup, Heal, Order, or Drop
-  optionSelect <- lift $ case utilTrait of
-    -- If the utility is Heal, give an option to Heal
-    Recovery -> selSyOption select 4 [(\s -> newPre ++
-       mkSelOpt ("LVLup - " ++ showlLVupCost ++ "  " ++ showUtilPair 5 6) s)
-      ,mkSelOpt $ strictSpacing 16 "Heal - 1" ++ showUtilPair 7 8
-      ,mkSelOpt $ strictSpacing 16 "Order" ++ showUtilStats selectedUtil (0,0,0)
-      ,mkSelOpt $ "Drop" ++ ln]
-    -- Otherwise, don't give that option
-    _ -> selSyOption select 3 [(\s -> newPre ++
-       mkSelOpt ("LVLup - " ++ showlLVupCost ++ "  " ++ showUtilPair 5 6) s)
-      ,mkSelOpt $ strictSpacing 14 "Order" ++ showUtilPair 7 8
-      ,mkSelOpt $ strictSpacing 14 "Drop" ++ showUtilStats selectedUtil (0,0,0)
-       ++ newLns 2]
-  -- Left is for if the selected utility is Heal, Right is for anything else
-  case (if utilTrait == Recovery then Left else Right) optionSelect of
-    x | elem x [Left 0, Right 0] -> menu utilSelect -- go back to menu
-    -- LVLup
-    x | elem x [Left 1, Right 1] -> case view nextLevels selectedUtil of
-      ((cost,bonus):lvls) | viewPlayer xp >= cost -> do
-        let ((_,(effUp,defUp,waitUp)):restLevels) = view nextLevels selectedUtil
-            levelUp = over eff (effUp +) .
-                      over def (defUp +) .
-                      over waitVal (waitUp +) .
-                      set nextLevels restLevels
-            levelUpUtil int = over belt (inject levelUp utilSelect) .
-                              over xp (subtract $ (fst . head) $
-                                       view nextLevels selectedUtil)
-        modify $ over player $ levelUpUtil utilSelect
-        selectOption optionSelect
-      _ -> selectOption optionSelect
-    -- Heal
-    (Left 2) -> let lvlsNum = length $ view nextLevels selectedUtil
-      in if lvlsNum == 10 then selectOption optionSelect
-      else do let updatedName = case reverse $ showUtilName selectedUtil of
-                    ('1':'+':eman) -> reverse eman
-                    (int:'+':eman) -> reverse eman ++ "+" ++
-                                      show (read [int] - 1)
-                    ('P':'S':eman) -> reverse eman ++ "+9"
-                  healLevels = view nextLevels $ listUtilities !!!
-                               -- Heal and Quick Heal are 2 different utilities
-                               case showUtilName selectedUtil of
-                                    ('H':xs) -> 11
-                                    _        -> 19
-                  lowerLvl = over belt $ flip inject utilSelect $
-                             set utilName updatedName .
-                             over nextLevels (healLevels !!! (10 - lvlsNum) :)
-                  heal (x,y) = let newHp = x + view eff selectedUtil
-                               in if newHp > y then (y, y) else (newHp, y)
-              modify $ over player $ over hp heal . lowerLvl
-              selectOption optionSelect
-    -- Order
-    x | elem x [Left 3, Right 2]
-      -- you need at least 2 utilities to change the order
-      -> if beltLength == 1 then selectOption optionSelect else do
-      let showStar n m = showUtil n $ if m == "* " then m
-                           else if n == utilSelect then "> " else "  "
-          showScreen int utils = pre (viewPlayer xp) ++ utils ++ mkSp 20 ++
-                                 showUtilStats (viewPlayer belt !!! int)
-                                 (beltBonuses $ viewPlayer belt) ++ newLns 3
-      utilSelect2 <- lift $ selSyUtility showScreen utilSelect beltLength
-        [\s-> showStar 1 s,                           \s-> showStar 2 s ++ ln
-        ,\s-> showHP (viewPlayer hp) ++ showStar 3 s, \s-> showStar 4 s ++ ln
-        ,\s-> mkSp 20 ++ showStar 5 s,                \s-> showStar 6 s ++ ln
-        ,\s-> mkSp 20 ++ showStar 7 s,                \s-> showStar 8 s ++ ln]
-      if utilSelect == utilSelect2 then selectOption select
-      else let util1 = viewPlayer belt !!! utilSelect
-               util2 = viewPlayer belt !!! utilSelect2
-               replaceItem 1 y (x:xs) = y:xs
-               replaceItem n y (x:xs) = x : replaceItem (n - 1) y xs
-               switch n m = replaceItem n util2 . replaceItem m util1
-               reorder = over belt $ switch utilSelect utilSelect2
-           in do modify $ over player reorder
-                 menu utilSelect2
-    -- Drop
-    x | elem x [Left 4, Right 3]
-      -- you need at least 1 utility in your inventory
-      -> if beltLength == 1 then selectOption optionSelect else do
-      confirmDrop <- lift $ selSyOption select 2
-        [\s -> newPre ++ sp4 ++ s ++ "Drop" ++ mkSp 12 ++ showUtilPair 5 6 ++ ln
-        ,\s -> sp4 ++ s ++ "Cancel" ++ mkSp 11 ++ showUtilPair 7 8 ++ ln ++
-         mkSp 20 ++ showUtilStats selectedUtil (0,0,0) ++ newLns 3]
-      if elem confirmDrop [0,2] then selectOption optionSelect else do
-      let util = viewPlayer belt !!! utilSelect
-          mkOption = Option $ fromJust $ lookup (view utilName util) storageLocs
-      modify $ over player $ over belt (delete util) .
-                             addOpt (mkOption $ CS util)
-      menu $ if utilSelect > beltLength - 1 then beltLength - 1
-                                            else utilSelect
+   gameState <- get
+   let viewPlayer attribute = view (player . attribute) gameState
+       selectedUtil = viewPlayer belt !!! utilSelect
+       showUtilPair = on (++) $ showUtilFrom (viewPlayer belt)
+                            <*> \n -> if n == utilSelect then "> " else "  "
+       newPre = pre (viewPlayer xp) ++ showUtilPair 1 2 ++ ln ++
+                showHP (viewPlayer hp) ++ showUtilPair 3 4 ++ ln
+       showlLVupCost = case view nextLevels selectedUtil of
+                            (x:_) -> strictSpacing 4 (show $ fst x)
+                            [] -> sp4
+       utilTrait = view trait selectedUtil
+       beltLength = length $ viewPlayer belt
+   -- Choose LVLup, Heal, Order, or Drop
+   optionSelect <- lift $ case utilTrait of
+     -- If the utility is Heal, give an option to Heal
+     Recovery -> selSyOption select 4 [(\s -> newPre ++
+        mkSelOpt ("LVLup - " ++ showlLVupCost ++ "  " ++ showUtilPair 5 6) s)
+       ,mkSelOpt $ strictSpacing 16 "Heal - 1" ++ showUtilPair 7 8
+       ,mkSelOpt $ strictSpacing 16 "Order" ++ showUtilStats selectedUtil (0,0,0)
+       ,mkSelOpt $ "Drop" ++ ln]
+     -- Otherwise, don't give that option
+     _ -> selSyOption select 3 [(\s -> newPre ++
+        mkSelOpt ("LVLup - " ++ showlLVupCost ++ "  " ++ showUtilPair 5 6) s)
+       ,mkSelOpt $ strictSpacing 14 "Order" ++ showUtilPair 7 8
+       ,mkSelOpt $ strictSpacing 14 "Drop" ++ showUtilStats selectedUtil (0,0,0)
+        ++ newLns 2]
+   -- Left is for if the selected utility is Heal, Right is for anything else
+   case (if utilTrait == Recovery then Left else Right) optionSelect of
+     x | elem x [Left 0, Right 0] -> menu utilSelect -- go back to menu
+     -- LVLup
+     x | elem x [Left 1, Right 1] -> case view nextLevels selectedUtil of
+       ((cost,bonus):lvls) | viewPlayer xp >= cost -> do
+         let ((_,(effUp,defUp,waitUp)):restLevels) = view nextLevels selectedUtil
+             levelUp = over eff (effUp +) .
+                       over def (defUp +) .
+                       over waitVal (waitUp +) .
+                       set nextLevels restLevels
+             levelUpUtil int = over belt (inject levelUp utilSelect) .
+                               over xp (subtract $ (fst . head) $
+                                        view nextLevels selectedUtil)
+         modify $ over player $ levelUpUtil utilSelect
+         selectOption optionSelect
+       _ -> selectOption optionSelect
+     -- Heal
+     (Left 2) -> let lvlsNum = length $ view nextLevels selectedUtil
+       in if lvlsNum == 10 then selectOption optionSelect
+       else do let updatedName = case reverse $ showUtilName selectedUtil of
+                     ('1':'+':eman) -> reverse eman
+                     (int:'+':eman) -> reverse eman ++ "+" ++
+                                       show (read [int] - 1)
+                     ('P':'S':eman) -> reverse eman ++ "+9"
+                   healLevels = view nextLevels $ listUtilities !!!
+                                -- Heal and Quick Heal are 2 different utilities
+                                case showUtilName selectedUtil of
+                                     ('H':xs) -> 11
+                                     _        -> 19
+                   lowerLvl = over belt $ flip inject utilSelect $
+                              set utilName updatedName .
+                              over nextLevels (healLevels !!! (10 - lvlsNum) :)
+                   heal (x,y) = let newHp = x + view eff selectedUtil
+                                in if newHp > y then (y, y) else (newHp, y)
+               modify $ over player $ over hp heal . lowerLvl
+               selectOption optionSelect
+     -- Order
+     x | elem x [Left 3, Right 2]
+       -- you need at least 2 utilities to change the order
+       -> if beltLength == 1 then selectOption optionSelect else do
+       let showStar n m = showUtil n $ if m == "* " then m
+                            else if n == utilSelect then "> " else "  "
+           showScreen int utils = pre (viewPlayer xp) ++ utils ++ mkSp 20 ++
+                                  showUtilStats (viewPlayer belt !!! int)
+                                  (beltBonuses $ viewPlayer belt) ++ newLns 3
+       utilSelect2 <- lift $ selSyUtility showScreen utilSelect beltLength
+         [\s-> showStar 1 s,                           \s-> showStar 2 s ++ ln
+         ,\s-> showHP (viewPlayer hp) ++ showStar 3 s, \s-> showStar 4 s ++ ln
+         ,\s-> mkSp 20 ++ showStar 5 s,                \s-> showStar 6 s ++ ln
+         ,\s-> mkSp 20 ++ showStar 7 s,                \s-> showStar 8 s ++ ln]
+       if utilSelect == utilSelect2 then selectOption select
+       else let util1 = viewPlayer belt !!! utilSelect
+                util2 = viewPlayer belt !!! utilSelect2
+                replaceItem 1 y (x:xs) = y:xs
+                replaceItem n y (x:xs) = x : replaceItem (n - 1) y xs
+                switch n m = replaceItem n util2 . replaceItem m util1
+                reorder = over belt $ switch utilSelect utilSelect2
+            in do modify $ over player reorder
+                  menu utilSelect2
+     -- Drop
+     x | elem x [Left 4, Right 3]
+       -- you need at least 1 utility in your inventory
+       -> if beltLength == 1 then selectOption optionSelect else do
+       confirmDrop <- lift $ selSyOption select 2
+         [\s -> newPre ++ sp4 ++ s ++ "Drop" ++ mkSp 12 ++ showUtilPair 5 6 ++ ln
+         ,\s -> sp4 ++ s ++ "Cancel" ++ mkSp 11 ++ showUtilPair 7 8 ++ ln ++
+          mkSp 20 ++ showUtilStats selectedUtil (0,0,0) ++ newLns 3]
+       if elem confirmDrop [0,2] then selectOption optionSelect else do
+        let util = viewPlayer belt !!! utilSelect
+            mkOption = Option $ fromJust $ lookup (view utilName util) storageLocs
+        modify $ over player $ over belt (delete util) .
+                               addOpt (mkOption $ CS util)
+        menu $ if utilSelect > beltLength - 1 then beltLength - 1
+                                              else utilSelect
 
 
 
