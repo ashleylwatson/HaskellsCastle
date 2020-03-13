@@ -15,10 +15,8 @@ import Control.Monad.State.Lazy
 import Control.Monad.Trans
 
 import Data.Function (on)
-import Data.Foldable
 import Data.List
 import Data.Maybe
-import Data.Tuple
 
 import System.IO
 import System.Random
@@ -87,24 +85,24 @@ battle = do
           battle
   -- use utility or select then equip utility
   else do
-  newSelect <- printBattle -- select might not change
-  if view2 wait player == 0 -- player goes before the enemy
-  then case view2 heldU player of
-    (Just _) -> do player -|==> enemy -- player uses their utility
-                   battle
-    _ -> do modify $ over player (equip newSelect) -- equip new utility
-                   . (blaze =<< view timePassed) -- update Burning Agony's eff
-                   . set select newSelect -- update select
-            battle
-  else case view2 heldU enemy of
-    (Just _) -> do player <==|- enemy -- enemy uses their utility
-                   battle
-    _ -> do let (enemyNum, newGen) = (randomR (1, length $ view2 belt enemy) $
-                                     view gen battleState)  :: (Int, StdGen)
-            modify $ over enemy (equip enemyNum) -- equip new utility
-                   . (blaze =<< view timePassed)
-                   . set gen newGen -- update Random Number
-            battle
+   newSelect <- printBattle -- select might not change
+   if view2 wait player == 0 -- player goes before the enemy
+   then case view2 heldU player of
+     (Just _) -> do player -|==> enemy -- player uses their utility
+                    battle
+     _ -> do modify $ over player (equip newSelect) -- equip new utility
+                    . (blaze =<< view timePassed) -- update Burning Agony's eff
+                    . set select newSelect -- update select
+             battle
+   else case view2 heldU enemy of
+     (Just _) -> do player <==|- enemy -- enemy uses their utility
+                    battle
+     _ -> do let (enemyNum, newGen) = (randomR (1, length $ view2 belt enemy) $
+                                      view gen battleState)  :: (Int, StdGen)
+             modify $ over enemy (equip enemyNum) -- equip new utility
+                    . (blaze =<< view timePassed)
+                    . set gen newGen -- update Random Number
+             battle
 
 
 
